@@ -1,0 +1,32 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Card from "../components/Card.astro";
+import Navbar from "../components/Navbar";
+import { Jumbotron } from "../components/Jumbotron";
+
+import { isLoading } from "../store/nanostore";
+
+---
+
+<Layout title="Web Pengamat Cuaca">
+  <main class="bg-white min-h-screen">
+    <div id="main" class="relative min-h-[100vh]" style={ isLoading ? {display: "hidden"} : ""}>
+      <div
+        class="absolute inset-0 bg-cover bg-center"
+        style="background-image: url('/img/bali-background.jpg');"
+      >
+      </div>
+      <div
+        class="absolute inset-0 bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-lg"
+      >
+      <p>{isLoading.get()}</p>
+        <Navbar client:only="react" />
+        <Jumbotron client:only="react" />
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script is:inline>
+ 
+</script>
