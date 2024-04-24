@@ -12,7 +12,7 @@ export default defineConfig({
   integrations: [tailwind(),  react({
     include: ['**/react/*'],
   })],
-  adapter: vercel({
+  adapter: vercelServerless({
     webAnalytics: {
       enabled: true,
     },
