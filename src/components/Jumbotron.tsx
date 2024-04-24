@@ -5,11 +5,16 @@ import { format } from "date-fns";
 import ReactAnimatedWeather from "react-animated-weather";
 
 import { indicateLocalWeather } from "../etc/iconlist";
-import { isLoading } from "../store/nanostore";
+
+interface Country {
+  ID: string;
+  LocalizedName: string;
+}
 
 interface City {
   Key: number;
   LocalizedName: string;
+  Country: Country;
 }
 
 export const Jumbotron = () => {
@@ -76,21 +81,16 @@ export const Jumbotron = () => {
   }, [resultData]);
 
   useEffect(() => {
-    const searchCityFn = setTimeout(() => {
+    const searchCityFn = setTimeout(async () => {
       setIsloading(true);
-      axios
-        .get(
-          `http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=${accuApiKey}&q=${searchCity}&language=id-id`
-        )
-        .then((response: any) => {
-          setSearchCityResult(response.data);
-          setIsloading(false); // Move this inside the then block to ensure loading state is set properly
-        })
-        .catch((error) => {
-          console.error("Error fetching search results:", error);
-          setSearchCityResult([]); // Handle error case by setting search result to empty array
-          setIsloading(false); // Ensure loading state is set to false even in case of error
-        });
+      const result = await fetch(
+        `http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=${accuApiKey}&q=${searchCity}&language=id-id`
+      )
+
+      if (result) {
+        setSearchCityResult(await result.json());
+        setIsloading(false);
+      }
     }, 2000);
 
     return () => clearTimeout(searchCityFn);
@@ -134,24 +134,28 @@ export const Jumbotron = () => {
             ></input>
           </div>
         </div>
-        <div className="flex justify-center pt-2">
-          <div className="bg-white p-2 rounded-md w-3/4">
-            {isLoading && <p>Loading...</p>}
-            {!isLoading && (
-              <ul className="text-left overflow-auto whitespace-normal max-h-[120px]">
-                {searchCityResult && searchCityResult.length > 0 ? (
-                  searchCityResult.map((data, index) => (
-                    <li key={index}>
-                      <a href="#">{data.LocalizedName}</a>
-                    </li>
-                  ))
-                ) : (
-                  <li>No results found</li>
-                )}
-              </ul>
-            )}
+        {searchCity && (
+          <div className="flex justify-center pt-2">
+            <div className="bg-white p-2 rounded-md w-3/4 text-left font-medium">
+              {isLoading && <p>Loading...</p>}
+              {!isLoading && (
+                <ul className="overflow-auto whitespace-normal max-h-[120px]">
+                  {searchCityResult && searchCityResult.length > 0 ? (
+                    searchCityResult
+                      .filter((data) => data.Country.ID === "ID")
+                      .map((data, index) => (
+                        <li key={index}>
+                          <a href="#">{data.LocalizedName}</a>
+                        </li>
+                      ))
+                  ) : (
+                    <li>No results found</li>
+                  )}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
