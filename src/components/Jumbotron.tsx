@@ -38,7 +38,7 @@ export const Jumbotron = () => {
 
   const findWeather = async (cityKey: number) => {
     return await axios.get(
-      `http://dataservice.accuweather.com/forecasts/v1/daily/1day/${cityKey}?apikey=${accuApiKey}&language=id-id&details=false&metric=true`
+      `https://dataservice.accuweather.com/forecasts/v1/daily/1day/${cityKey}?apikey=${accuApiKey}&language=id-id&details=false&metric=true`
     );
   };
 
@@ -46,7 +46,7 @@ export const Jumbotron = () => {
     const fetchWeatherApi = async () => {
       setIsloading(true);
       const cityKey = await axios.get(
-        `http://dataservice.accuweather.com/locations/v1/cities/ipaddress?apikey=%20${accuApiKey}%20&language=id-id`
+        `https://dataservice.accuweather.com/locations/v1/cities/ipaddress?apikey=%20${accuApiKey}%20&language=id-id`
       );
 
       const weatherResult = await findWeather(cityKey.data.Key);
@@ -87,7 +87,7 @@ export const Jumbotron = () => {
       setIsloading(true);
       axios
         .get(
-          `http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=${accuApiKey}&q=${searchCity}&language=id-id&details=true`
+          `https://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=${accuApiKey}&q=${searchCity}&language=id-id&details=true`
         )
         .then((response) => {
           const data = response.data;

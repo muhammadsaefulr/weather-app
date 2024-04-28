@@ -42,7 +42,7 @@ const PopupInformation: React.FC<PopupInformationProps> = ({
   useEffect(() => {
     axios
       .get(
-        `http://dataservice.accuweather.com/currentconditions/v1/${keyId}?apikey=${accuApiKey}`
+        `https://dataservice.accuweather.com/currentconditions/v1/${keyId}?apikey=${accuApiKey}`
       )
       .then((response) => {
         const data = response.data[0];
