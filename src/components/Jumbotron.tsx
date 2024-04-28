@@ -4,7 +4,9 @@ import axios from "axios";
 import { format } from "date-fns";
 import ReactAnimatedWeather from "react-animated-weather";
 
-import { indicateLocalWeather } from "../etc/iconlist";
+import { indicateLocalWeather } from "../utils/iconlist";
+import fcmProviders from "../firebase/fcm-providers";
+import PopupInformation from "./PopupInformation";
 
 interface Country {
   ID: string;
@@ -18,10 +20,11 @@ interface City {
 }
 
 export const Jumbotron = () => {
-  const [exampleData, setExampleData] = useState(null);
   const [searchCity, setSearchCity] = useState("");
   const [weatherIcon, setWeatherIcon] = useState("");
   const [isLoading, setIsloading] = useState(false);
+
+  const [popupData, setPopupData] = useState({ keyId: 0, localizedName: "" });
 
   const accuApiKey = import.meta.env.PUBLIC_ACCUWEATHER_API;
   const [resultData, setResultData] = useState({
@@ -54,9 +57,10 @@ export const Jumbotron = () => {
 
       const weatherTemperature =
         weatherResult.data.DailyForecasts[0].Temperature.Minimum.Value;
-      const objectWeatherApi = weatherResult.data;
 
       const weatherData = weatherResult.data.DailyForecasts[0].Day;
+
+      console.log("weather data :", weatherData);
 
       setResultData({
         weather: weatherData.Icon,
@@ -64,7 +68,6 @@ export const Jumbotron = () => {
         temperature: weatherTemperature,
         date: dateTimeToStr,
       });
-      setExampleData(objectWeatherApi);
     };
 
     fetchWeatherApi();
@@ -75,29 +78,44 @@ export const Jumbotron = () => {
       (simillarIcon) => simillarIcon.iconNumber === resultData.weather
     );
 
-    console.log("weather icon Number: ", weatherIcon);
-
     setWeatherIcon(weatherIcon?.icon!);
   }, [resultData]);
+
 
   useEffect(() => {
     const searchCityFn = setTimeout(async () => {
       setIsloading(true);
-      const result = await fetch(
-        `http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=${accuApiKey}&q=${searchCity}&language=id-id`
-      )
-
-      if (result) {
-        setSearchCityResult(await result.json());
-        setIsloading(false);
-      }
+      axios
+        .get(
+          `http://dataservice.accuweather.com/locations/v1/cities/autocomplete?apikey=${accuApiKey}&q=${searchCity}&language=id-id&details=true`
+        )
+        .then((response) => {
+          const data = response.data;
+          console.log(data);
+          if (data) {
+            setSearchCityResult(data);
+            setIsloading(false);
+          }
+        });
     }, 2000);
 
     return () => clearTimeout(searchCityFn);
   }, [searchCity]);
-
+  
+  const dataPassToPopup = (data: { keyId: number; localizedName: string }) => {
+    setPopupData({ keyId: data.keyId, localizedName: data.localizedName });
+    setSearchCityResult([])
+    setSearchCity("")
+  };
+  
   return (
     <div className="text-center flex justify-center">
+      {popupData.localizedName && (
+        <div className="z-99 absolute">
+          <PopupInformation keyId={popupData.keyId} localizedName={popupData.localizedName} onClose={() => setPopupData({keyId: 0, localizedName: ""})}
+          />
+        </div>
+      )}
       <div className="pt-20">
         <div className="flex justify-center">
           <div className="flex gap-x-3 text-white">
@@ -119,7 +137,7 @@ export const Jumbotron = () => {
           </div>
         </div>
         <p className="text-white font-semibold text-2xl pt-8">
-          Cari Wilayah Untuk Mendapatkan Info Cuaca
+          Cari Wilayah Untuk Mendapatkan Data Cuaca Dan Gempa
         </p>
         <div className="flex justify-center mt-6">
           <div className="bg-white flex space-x-3 rounded-full p-2 w-3/4">
@@ -140,12 +158,22 @@ export const Jumbotron = () => {
               {isLoading && <p>Loading...</p>}
               {!isLoading && (
                 <ul className="overflow-auto whitespace-normal max-h-[120px]">
-                  {searchCityResult && searchCityResult.length > 0 ? (
+                  {searchCityResult && searchCityResult.length !== null ? (
                     searchCityResult
                       .filter((data) => data.Country.ID === "ID")
                       .map((data, index) => (
                         <li key={index}>
-                          <a href="#">{data.LocalizedName}</a>
+                          <a
+                            href="#"
+                            onClick={() =>
+                              dataPassToPopup({
+                                keyId: data.Key,
+                                localizedName: data.LocalizedName,
+                              })
+                            }
+                          >
+                            {data.LocalizedName}
+                          </a>
                         </li>
                       ))
                   ) : (

@@ -25,7 +25,7 @@ export default function Navbar() {
       </div>
       <div className="menu flex space-x-3 pt-2">
         {dataLink.map((data) => (
-          <a key={data.id} href={data.link}>
+          <a className="lg:mx-2 md: hidden" key={data.id} href={data.link}>
             <p className="text-white">{data.menu}</p>
           </a>
         ))}
